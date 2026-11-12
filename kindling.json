@@ -14,11 +14,11 @@
  ],
  "engine": {
   "repo": "kindlingai/gr8",
-  "ref": "v1.0",
-  "commit": "db6f2c17c7b05303b69ce667e416d10340aeb9b7",
+  "ref": "v1.0.1",
+  "commit": "6333c78a4ab4cfedc706793d689f54858c576d84",
   "pin": "image",
-  "image": "ghcr.io/kindlingai/gr8:v1.0",
-  "image_digest": "sha256:11ff2823184b0512ae62e0f1c281c46941cfb0fd81096e1dac4c313ad3fe9413"
+  "image": "ghcr.io/kindlingai/gr8:v1.0.1",
+  "image_digest": "sha256:02e44b9fc971f2acffe117df50de1be829462453287aab2c1d61a31a55738c0b"
  },
  "default_config": "tp4",
  "configs": [

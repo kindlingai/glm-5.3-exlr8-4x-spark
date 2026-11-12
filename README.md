@@ -18,7 +18,7 @@ total · a 513,536-token KV pool (max tokens per active chat: 513,522 at 1, 207,
 Four DGX Sparks, TP=4, this recipe's `.env` (int4 KV, DFlash2 drafter, SSD KV store), measured 2026-11-11 with gr8's
 own benchmark (`bench/bench.py`, default level), one boot. GPU clocks were uncapped in the timed stages. The build
 was a staged image of gr8 [#490](https://github.com/kindlingai/gr8/pull/490) before it merged; the recipe pins
-gr8 v1.0, which has it (see [Engine pin](#engine-pin)). Every speed is in tokens per second (tok/s).
+gr8 v1.0.1, which has it (see [Engine pin](#engine-pin)). Every speed is in tokens per second (tok/s).
 
 One request, short prompts (46-54 tokens, up to 512 tokens out, 6 runs each):
 
@@ -157,11 +157,11 @@ This recipe has no engine code. It runs one published gr8 image, named by tag an
 
 | | |
 |---|---|
-| engine | [kindlingai/gr8](https://github.com/kindlingai/gr8) [`v1.0`](https://github.com/kindlingai/gr8/releases/tag/v1.0) at [`db6f2c1`](https://github.com/kindlingai/gr8/commit/db6f2c17c7b05303b69ce667e416d10340aeb9b7) |
-| image | `ghcr.io/kindlingai/gr8:v1.0` |
-| digest | `sha256:11ff2823184b0512ae62e0f1c281c46941cfb0fd81096e1dac4c313ad3fe9413` |
+| engine | [kindlingai/gr8](https://github.com/kindlingai/gr8) [`v1.0.1`](https://github.com/kindlingai/gr8/releases/tag/v1.0.1) at [`6333c78`](https://github.com/kindlingai/gr8/commit/6333c78a4ab4cfedc706793d689f54858c576d84) |
+| image | `ghcr.io/kindlingai/gr8:v1.0.1` |
+| digest | `sha256:02e44b9fc971f2acffe117df50de1be829462453287aab2c1d61a31a55738c0b` |
 
-The results above were measured on a staged image of gr8 [#490](https://github.com/kindlingai/gr8/pull/490), which merged as commit [`a555ee2`](https://github.com/kindlingai/gr8/commit/a555ee2a078946332769b5cd412ba3c73c46e242). v1.0 is one commit after it, and that commit changes only the README, the docs, the benchmark tools and their result files, not the engine source. This recipe was not booted again on the v1.0 image.
+The speed and quality results above were measured on 2026-11-11 on a staged image of gr8 [#490](https://github.com/kindlingai/gr8/pull/490), which merged as commit [`a555ee2`](https://github.com/kindlingai/gr8/commit/a555ee2a078946332769b5cd412ba3c73c46e242). `v1.0.1` ([`6333c78`](https://github.com/kindlingai/gr8/commit/6333c78a4ab4cfedc706793d689f54858c576d84)) updates the persistent SSD KV store (`KV_STORE` in `.env.example`) to preallocate its block file at boot, write only newly added KV blocks when a resumed chat continues ([#484](https://github.com/kindlingai/gr8/pull/484)), and persist steered chats alongside unsteered ones ([#498](https://github.com/kindlingai/gr8/pull/498)), verified on four DGX Sparks at TP=4 on 2026-11-12.
 
 After v1.0, the pin moves to a newer gr8 release only after this recipe was booted and measured on it. `python3 check.py` checks
 that `compose.yaml` and `kindling.json` name the same image; CI runs it on every pull request.
