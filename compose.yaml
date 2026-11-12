@@ -1,0 +1,90 @@
+# GLM-5.3 on four DGX Sparks (GB10): gr8's published image, pinned by tag and digest, with this recipe's .env.
+# No engine is compiled here: the image has the engine for every TP width. Run the SAME file with the SAME .env
+# (.env.example) on all four boxes. The head (the first address in PEERS) serves the OpenAI API on port 8100.
+#
+#   docker compose up -d                                  # the first boot fetches this box's part of the model
+#   docker compose logs -f                                # this box's supervisor
+#   docker compose exec gr8 /opt/gr8/gr8 glm53 smoke      # on the head, once it serves
+#   docker compose exec gr8 /opt/gr8/gr8 glm53 down       # on the head: stops every rank
+#
+# RULE (gr8's): no option default lives here. The launcher in the image owns every default, and .env carries this
+# recipe's settings. The only values set below are the container's own paths.
+name: glm53-4x-spark
+services:
+  gr8:
+    # The engine pin: one gr8 image, by tag and digest (kindling.json "engine" names the same one).
+    image: ${GR8_IMAGE:-ghcr.io/kindlingai/gr8:v1.0@sha256:11ff2823184b0512ae62e0f1c281c46941cfb0fd81096e1dac4c313ad3fe9413}
+    container_name: glm53-4x-spark
+    # The launcher's options, from .env. Optional: options can also come on the command line of `run`.
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # The container's own paths (the volumes below, the image's python and front end). Set here so a MODEL_CACHE,
+      # GR8_WORK_DIR, PY or FRONT_BIN line in .env, meant for a bare-metal box, cannot point the launcher at a path that does
+      # not exist in the container.
+      - GR8_WORK_DIR=/var/lib/gr8/home
+      - MODEL_CACHE=/var/lib/gr8/cache
+      - PY=/usr/bin/python3
+      - FRONT_BIN=/opt/gr8/bin/g6front-rs
+    # The RoCE fabric and the front end need the box's real interfaces. The fabric bootstrap, the supervisors' control
+    # port (7340), the S2 control port (7341) and the API (8100) are host ports.
+    network_mode: host
+    # The launcher refuses to start next to another g6m4 on the box, and sees one started outside the container only
+    # in the host's process list.
+    pid: host
+    devices:
+      - /dev/infiniband:/dev/infiniband
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    ulimits:
+      # The fabric registers its pinned buffers with the NIC.
+      memlock: -1
+      # A crash must not dump core. A rank maps ~90 GB, and the dumping thread holds the NVIDIA driver's lock the
+      # whole time it writes, which can leave the box unreachable until a power cycle.
+      core: 0
+    # The engine runs with no more rights than it needs: the image's uid 1000, no capabilities but IPC_LOCK (pinned
+    # memory), no privilege escalation, a read-only image with a private /tmp.
+    cap_drop: [ALL]
+    cap_add: [IPC_LOCK]
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=1g,mode=1777
+    # Under memory pressure the kernel ends the engine before sshd or the rest of the box.
+    oom_score_adj: 1000
+    # tini as PID 1: it forwards docker's SIGTERM to the launcher and reaps the engine and the shims.
+    init: true
+    # SIGTERM makes the supervisor quit its engine (10 s), then signal it (5 s more). A KV_STORE ssd store with
+    # persist=on and keep=sessions (or all) gives the quit 120 s, as it stores the pool's runs for the next boot: set
+    # GR8_STOP_GRACE=150s with one, or docker kills the engine mid-store (the next boot then keeps what serving stored).
+    stop_grace_period: ${GR8_STOP_GRACE:-30s}
+    volumes:
+      # This box's part of the model (prepare fills it, ~90 GB at TP=4). Unset, a named volume. Set GR8_CACHE to a
+      # host directory, owned by uid 1000, to keep it outside docker.
+      - ${GR8_CACHE:-cache}:/var/lib/gr8/cache
+      # Logs and state: out/ (supervisor.log, g6m4.r<N>.err, shim.log, front.log, gr8.state), and the S2 request
+      # directory. Unset, a named volume.
+      - ${GR8_HOME:-home}:/var/lib/gr8/home
+    healthcheck:
+      # Healthy once this box's supervisor reports the cluster serving (on the head, once its API's /health answers
+      # too): `gr8 <model> health`, the same check a Kubernetes exec probe runs. $$ leaves GR8_MODEL to the
+      # container's shell, which has the .env file's value, as the entrypoint does. A boot reads ~80 GB, so allow it time.
+      test: ["CMD-SHELL", "exec /opt/gr8/gr8 \"$${GR8_MODEL}\" health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30m
+    # `gr8 glm53 down` exits 0 on every box, and the cluster stays down. Any other exit restarts the container: a failed
+    # rank (1) rejoins, and a refused handshake (4) or bad options (2) retry, with docker's delay doubling up to a
+    # minute, until the boxes agree.
+    restart: on-failure
+
+volumes:
+  cache:
+  home:

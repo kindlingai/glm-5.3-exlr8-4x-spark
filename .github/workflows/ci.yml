@@ -1,0 +1,18 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: The engine pin agrees in kindling.json and compose.yaml
+        run: python3 check.py
+      - name: compose.yaml parses with .env.example
+        run: cp .env.example .env && docker compose config --quiet
+      - name: The pinned image exists
+        run: docker manifest inspect "$(python3 -c "import json; e = json.load(open('kindling.json'))['engine']; print(e['image'].split(':')[0] + '@' + e['image_digest'])")" > /dev/null

@@ -1,0 +1,204 @@
+{
+ "version": 1,
+ "title": "GLM-5.3",
+ "variant": "exlr8, int4 KV, DFlash2 drafter",
+ "summary": "Full GLM-5.3 on four DGX Sparks at TP=4 with gr8: the exlr8 release from Hugging Face, int4 KV with a 513,536-token pool, DFlash2 or MTP drafting, up to 8 requests sharing each decode step, prefix reuse and a persistent SSD KV store. The same image serves three, five or six boxes.",
+ "model": "kindlingai/glm-5.3-exlr8-k2-k3-k4",
+ "hardware": "DGX Spark (GB10)",
+ "stack": [
+  "gr8",
+  "exlr8",
+  "DFlash2",
+  "MTP",
+  "int4 KV"
+ ],
+ "engine": {
+  "repo": "kindlingai/gr8",
+  "ref": "v1.0",
+  "commit": "db6f2c17c7b05303b69ce667e416d10340aeb9b7",
+  "pin": "image",
+  "image": "ghcr.io/kindlingai/gr8:v1.0",
+  "image_digest": "sha256:11ff2823184b0512ae62e0f1c281c46941cfb0fd81096e1dac4c313ad3fe9413"
+ },
+ "default_config": "tp4",
+ "configs": [
+  {
+   "id": "tp3",
+   "label": "TP=3",
+   "nodes": 3,
+   "decode": {
+    "code": 41.1,
+    "prose": 31.7
+   },
+   "prefill": [
+    {
+     "context": 8192,
+     "tps": 635
+    }
+   ],
+   "concurrency": [
+    {
+     "streams": 2,
+     "aggregate_tps": 50.6
+    },
+    {
+     "streams": 4,
+     "aggregate_tps": 63.8
+    }
+   ],
+   "max_context": 307136,
+   "kv_pool_tokens": 307136,
+   "max_concurrent": 8,
+   "notes": "bit225 experts (2.25 bpw), MTP only. RigMark 1.0.0, mean of two fresh boots, GPU clocks uncapped, measured 2026-10-24 with the launcher defaults of that date."
+  },
+  {
+   "id": "tp4",
+   "label": "TP=4",
+   "nodes": 4,
+   "decode": {
+    "code": 63.3,
+    "prose": 37.8,
+    "structured": 78.0
+   },
+   "decode_prompt_tokens": [
+    46,
+    54
+   ],
+   "prefill": [
+    {
+     "context": 32768,
+     "tps": 1540
+    },
+    {
+     "context": 131072,
+     "tps": 1361
+    }
+   ],
+   "concurrency": [
+    {
+     "streams": 1,
+     "aggregate_tps": 47.7,
+     "per_stream_tps": 50.9,
+     "ttft_p50_s": 0.4
+    },
+    {
+     "streams": 2,
+     "aggregate_tps": 59.8,
+     "per_stream_tps": 36.8,
+     "ttft_p50_s": 0.81
+    },
+    {
+     "streams": 4,
+     "aggregate_tps": 69.5,
+     "per_stream_tps": 22.8,
+     "ttft_p50_s": 1.51
+    },
+    {
+     "streams": 8,
+     "aggregate_tps": 85.8,
+     "per_stream_tps": 13.2,
+     "ttft_p50_s": 3.43
+    }
+   ],
+   "concurrency_prompt_tokens": [
+    48,
+    55
+   ],
+   "max_context": 513522,
+   "kv_pool_tokens": 513536,
+   "max_concurrent": 8,
+   "max_tokens_per_chat": [
+    {
+     "chats": 1,
+     "tokens": 513522,
+     "source": "measured"
+    },
+    {
+     "chats": 2,
+     "tokens": 207602,
+     "source": "computed"
+    },
+    {
+     "chats": 4,
+     "tokens": 54514,
+     "source": "computed"
+    },
+    {
+     "chats": 8,
+     "tokens": 19058,
+     "source": "computed"
+    }
+   ],
+   "max_tokens_per_chat_note": "prompt + max_tokens · 2-chat prompt (measured): 199,410 (max_tokens omitted) · 174,834 (max_tokens 32,768)",
+   "quality": [
+    {
+     "name": "75-item check",
+     "value": "73 of 75"
+    },
+    {
+     "name": "Needle recall",
+     "value": "found at 128K"
+    }
+   ],
+   "notes": "home experts (3.25 bpw), int4 KV default, DFlash2 + MTP drafting. bench/bench.py on 2026-11-11, one fresh boot, GPU clocks uncapped."
+  },
+  {
+   "id": "tp5",
+   "label": "TP=5",
+   "nodes": 5,
+   "decode": {
+    "code": 51.0,
+    "prose": 38.0
+   },
+   "prefill": [
+    {
+     "context": 8192,
+     "tps": 1554
+    }
+   ],
+   "concurrency": [
+    {
+     "streams": 2,
+     "aggregate_tps": 61.8
+    },
+    {
+     "streams": 4,
+     "aggregate_tps": 76.3
+    }
+   ],
+   "max_context": 502848,
+   "kv_pool_tokens": 502848,
+   "max_concurrent": 8,
+   "notes": "home experts (3.25 bpw), MTP only. RigMark 1.0.0, mean of two fresh boots, GPU clocks uncapped, measured 2026-10-24 with the launcher defaults of that date."
+  },
+  {
+   "id": "tp6",
+   "label": "TP=6",
+   "nodes": 6,
+   "decode": {
+    "code": 57.4,
+    "prose": 43.1
+   },
+   "prefill": [
+    {
+     "context": 8192,
+     "tps": 1808
+    }
+   ],
+   "concurrency": [
+    {
+     "streams": 2,
+     "aggregate_tps": 67.6
+    },
+    {
+     "streams": 4,
+     "aggregate_tps": 85.5
+    }
+   ],
+   "max_context": 614400,
+   "kv_pool_tokens": 614400,
+   "max_concurrent": 8,
+   "notes": "home experts (3.25 bpw), MTP only. RigMark 1.0.0, mean of two fresh boots, GPU clocks uncapped, measured 2026-10-24 with the launcher defaults of that date. One of the six boxes was capped at 2200 MHz."
+  }
+ ]
+}
