@@ -13,7 +13,7 @@ name: glm53-4x-spark
 services:
   gr8:
     # The engine pin: one gr8 image, by tag and digest (kindling.json "engine" names the same one).
-    image: ${GR8_IMAGE:-ghcr.io/kindlingai/gr8:v1.0@sha256:11ff2823184b0512ae62e0f1c281c46941cfb0fd81096e1dac4c313ad3fe9413}
+    image: ${GR8_IMAGE:-ghcr.io/kindlingai/gr8:v1.0.1@sha256:02e44b9fc971f2acffe117df50de1be829462453287aab2c1d61a31a55738c0b}
     container_name: glm53-4x-spark
     # The launcher's options, from .env. Optional: options can also come on the command line of `run`.
     env_file:
