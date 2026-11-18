@@ -5,8 +5,11 @@ If you are an agent booting this for someone, read [AGENTS.md](AGENTS.md) first,
 _**Join our discord to learn more about KindlingAI and `gr8`: https://discord.gg/8EAvYPV2rE**_
 
 Full GLM-5.3 on four DGX Sparks (GB10, 128 GB each) at TP=4, served by [gr8](https://github.com/kindlingai/gr8) from
-[kindlingai/glm-5.3-exlr8-k2-k3-k4](https://huggingface.co/kindlingai/glm-5.3-exlr8-k2-k3-k4). This recipe is gr8's
-default GLM-5.3 setup: the published gr8 image, pinned by digest, and one `.env` file. Nothing is compiled.
+the 0.5 weights of
+[kindlingai/glm-5.3-exlr8-k2-k3-k4](https://huggingface.co/kindlingai/glm-5.3-exlr8-k2-k3-k4/tree/a36ae4680871ffa6412061d5daf66c4d4ad5802c),
+the commit `MODEL` pins in `.env.example`. Later releases of that repository replaced the `home` and `bit225` profiles
+this recipe uses. This recipe is gr8's default GLM-5.3 setup: the published gr8 image, pinned by digest, and one
+`.env` file. Nothing is compiled.
 
 ![GLM-5.3 on four DGX Sparks: decode, prefill and concurrency](docs/card.png)
 
