@@ -1,8 +1,8 @@
 {
  "version": 1,
  "title": "GLM-5.3",
- "variant": "exlr8, int4 KV, DFlash2 drafter",
- "summary": "Full GLM-5.3 on four DGX Sparks at TP=4 with gr8: the exlr8 release from Hugging Face, int4 KV with a 513,536-token pool, DFlash2 or MTP drafting, up to 8 requests sharing each decode step, prefix reuse and a persistent SSD KV store. The same image serves three, five or six boxes.",
+ "variant": "exlr8 bit325, int4 KV, DFlash2 drafter",
+ "summary": "Full GLM-5.3 on four DGX Sparks at TP=4 with gr8 v1.1.0: the exlr8 bit325 release from Hugging Face, int4 KV with a 513,536-token pool, DFlash2 + MTP drafting, eight bit-exact kernel paths plus MoE union cap (48 quality default, 32 fast preset), up to 8 requests sharing each decode step, prefix reuse and a persistent SSD KV store. The same image serves three, five or six boxes.",
  "model": "kindlingai/glm-5.3-exlr8-k2-k3-k4",
  "hardware": "DGX Spark (GB10)",
  "stack": [
@@ -14,11 +14,11 @@
  ],
  "engine": {
   "repo": "kindlingai/gr8",
-  "ref": "v1.0.1",
-  "commit": "6333c78a4ab4cfedc706793d689f54858c576d84",
+  "ref": "v1.1.0",
+  "commit": "cdd1e0931047f55bba8f682a0ae79c4198668ca3",
   "pin": "image",
-  "image": "ghcr.io/kindlingai/gr8:v1.0.1",
-  "image_digest": "sha256:02e44b9fc971f2acffe117df50de1be829462453287aab2c1d61a31a55738c0b"
+  "image": "ghcr.io/kindlingai/gr8:v1.1.0",
+  "image_digest": "sha256:b22eedbd7902f65dbf2090897d75f5d92276cbf78a16bcde1f958aa56a306cf7"
  },
  "default_config": "tp4",
  "configs": [
@@ -56,9 +56,10 @@
    "label": "TP=4",
    "nodes": 4,
    "decode": {
-    "code": 63.3,
-    "prose": 37.8,
-    "structured": 78.0
+    "code": 67.1,
+    "prose": 39.9,
+    "structured": 78.7,
+    "counting": 83.2
    },
    "decode_prompt_tokens": [
     46,
@@ -66,38 +67,42 @@
    ],
    "prefill": [
     {
+     "context": 8192,
+     "tps": 1457
+    },
+    {
      "context": 32768,
-     "tps": 1540
+     "tps": 1605
     },
     {
      "context": 131072,
-     "tps": 1361
+     "tps": 1470
     }
    ],
    "concurrency": [
     {
      "streams": 1,
-     "aggregate_tps": 47.7,
-     "per_stream_tps": 50.9,
-     "ttft_p50_s": 0.4
+     "aggregate_tps": 50.6,
+     "per_stream_tps": 54.3,
+     "ttft_p50_s": 0.41
     },
     {
      "streams": 2,
-     "aggregate_tps": 59.8,
-     "per_stream_tps": 36.8,
-     "ttft_p50_s": 0.81
+     "aggregate_tps": 62.1,
+     "per_stream_tps": 34.7,
+     "ttft_p50_s": 0.72
     },
     {
      "streams": 4,
-     "aggregate_tps": 69.5,
-     "per_stream_tps": 22.8,
-     "ttft_p50_s": 1.51
+     "aggregate_tps": 83.3,
+     "per_stream_tps": 26.6,
+     "ttft_p50_s": 1.47
     },
     {
      "streams": 8,
-     "aggregate_tps": 85.8,
-     "per_stream_tps": 13.2,
-     "ttft_p50_s": 3.43
+     "aggregate_tps": 120.5,
+     "per_stream_tps": 18.7,
+     "ttft_p50_s": 3.05
     }
    ],
    "concurrency_prompt_tokens": [
@@ -132,15 +137,20 @@
    "max_tokens_per_chat_note": "prompt + max_tokens · 2-chat prompt (measured): 199,410 (max_tokens omitted) · 174,834 (max_tokens 32,768)",
    "quality": [
     {
-     "name": "75-item check",
-     "value": "73 of 75"
+     "name": "GSM8K-250 (C=4)",
+     "value": "246 of 250 (98.4%)"
+    },
+    {
+     "name": "HumanEval-164 (C=4)",
+     "value": "156 of 164 (95.1%)"
     },
     {
      "name": "Needle recall",
      "value": "found at 128K"
     }
    ],
-   "notes": "home experts (3.25 bpw), int4 KV default, DFlash2 + MTP drafting. bench/bench.py on 2026-11-11, one fresh boot, GPU clocks uncapped."
+   "lowest_mem_available_gib": 13.53,
+   "notes": "bit325 experts (3.25 bpw, v0.6 @ 3e388b45), int4 KV default, DFlash2 + MTP drafting, gr8 v1.1.0 defaults (8 bit-exact kernels ON, DEC_BK_MAX=2048, MOE_UNION_CAP=48 quality default; set MOE_UNION_CAP=32 for fast mode: 73.2 tok/s code, 97.1 tok/s at C=4, 139.0 tok/s at C=8). bench/bench.py default level on 2026-11-20, one fresh boot on a 200G switch, GPU clocks uncapped in timed stages."
   },
   {
    "id": "tp5",

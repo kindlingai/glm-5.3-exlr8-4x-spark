@@ -4,43 +4,52 @@ If you are an agent booting this for someone, read [AGENTS.md](AGENTS.md) first,
 
 _**Join our discord to learn more about KindlingAI and `gr8`: https://discord.gg/8EAvYPV2rE**_
 
-Full GLM-5.3 on four DGX Sparks (GB10, 128 GB each) at TP=4, served by [gr8](https://github.com/kindlingai/gr8) from
-[kindlingai/glm-5.3-exlr8-k2-k3-k4](https://huggingface.co/kindlingai/glm-5.3-exlr8-k2-k3-k4). This recipe is gr8's
+Full GLM-5.3 on four DGX Sparks (GB10, 128 GB each) at TP=4, served by [gr8](https://github.com/kindlingai/gr8) `v1.1.0` from
+the `bit325` width profile of [kindlingai/glm-5.3-exlr8-k2-k3-k4](https://huggingface.co/kindlingai/glm-5.3-exlr8-k2-k3-k4/tree/3e388b45b26ca4558351d22994afcfc85b99af74) (v0.6). This recipe is gr8's
 default GLM-5.3 setup: the published gr8 image, pinned by digest, and one `.env` file. Nothing is compiled.
 
 ![GLM-5.3 on four DGX Sparks: decode, prefill and concurrency](docs/card.png)
 
-63.3 tok/s for one request writing code · 1,540 tok/s prefill on a 32K prompt · 8 requests at once, 85.8 tok/s in
-total · a 513,536-token KV pool (max tokens per active chat: 513,522 at 1, 207,602 at 2) · a fact hidden in a 128K prompt found
+67.1 tok/s for one request writing code (73.2 tok/s in fast mode) · 1,605 tok/s prefill on a 32K prompt (1,470 tok/s at 128K) · 8 requests at once, 120.5 tok/s in total (139.0 tok/s in fast mode) · 13.5+ GiB free memory per box · a 513,536-token KV pool · a fact hidden in a 128K prompt found
 
 ## Results
 
-Four DGX Sparks, TP=4, this recipe's `.env` (int4 KV, DFlash2 drafter, SSD KV store), measured 2026-11-11 with gr8's
-own benchmark (`bench/bench.py`, default level), one boot. GPU clocks were uncapped in the timed stages. The build
-was a staged image of gr8 [#490](https://github.com/kindlingai/gr8/pull/490) before it merged; the recipe pins
-gr8 v1.0.1, which has it (see [Engine pin](#engine-pin)). Every speed is in tokens per second (tok/s).
+Four DGX Sparks on a 200G switch, TP=4, `gr8 v1.1.0` (`cdd1e09`), this recipe's `.env` (`bit325` v0.6 experts, int4 KV, DFlash2 + MTP drafter, default quality preset `MOE_UNION_CAP=48`), measured 2026-11-20 with gr8's own benchmark (`bench/bench.py`, default level), one fresh boot. GPU clocks were uncapped in the timed stages. Every speed is in tokens per second (tok/s).
 
 One request, short prompts (46-54 tokens, up to 512 tokens out, 6 runs each):
 
 | work | code | prose | structured | counting |
 |---|---|---|---|---|
-| tok/s, mean | 63.3 | 37.8 | 78.0 | 81.5 |
-| lowest - highest run | 52.9 - 75.4 | 35.9 - 42.9 | 71.4 - 83.4 | 80.4 - 82.5 |
+| tok/s, mean | 67.1 | 39.9 | 78.7 | 83.2 |
+| lowest - highest run | 58.0 - 76.9 | 37.6 - 42.1 | 70.7 - 85.3 | 82.0 - 84.1 |
 
 Prefill, cold prompt (one run each):
 
 | prompt | first token | prefill tok/s | decode after it | first token, same prompt again (cached) |
 |---|---|---|---|---|
-| 32K tokens | 21.2 s | 1,540 | 33.7 tok/s | 0.21 s |
-| 128K tokens | 96.3 s | 1,361 | 30.6 tok/s | 0.32 s |
+| 8K tokens | 5.66 s | 1,457 | 35.6 tok/s | 0.17 s |
+| 32K tokens | 20.42 s | 1,605 | 33.0 tok/s | 0.24 s |
+| 128K tokens | 89.28 s | 1,470 | 32.5 tok/s | 0.37 s |
 
 Requests at once (short mixed prompts, 48-55 tokens, up to 512 tokens out each):
 
 | requests at once | 1 | 2 | 4 | 8 |
 |---|---|---|---|---|
-| total tok/s | 47.7 | 59.8 | 69.5 | 85.8 |
-| tok/s per request | 50.9 | 36.8 | 22.8 | 13.2 |
-| first token, median | 0.40 s | 0.81 s | 1.51 s | 3.43 s |
+| total tok/s (quality default, `MOE_UNION_CAP=48`) | 50.6 | 62.1 | 83.3 | 120.5 |
+| tok/s per request (quality default) | 54.3 | 34.7 | 26.6 | 18.7 |
+| first token, median | 0.41 s | 0.72 s | 1.47 s | 3.05 s |
+
+### Speed and quality presets (`MOE_UNION_CAP`)
+
+`gr8 v1.1.0` enables eight bit-exact decode, prefill, and DFlash2 kernels by default (`KL = 0.00000`) plus `DEC_BK_MAX=2048` (leaving over 13.5 GiB free memory per box instead of 2.3 GiB) and a batch-budgeted MoE expert union cap (`MOE_UNION_CAP`):
+
+| preset (`.env`) | code decode | 4 streams total (per req) | 8 streams total (per req) | GSM8K-250 (C=4) | HumanEval-164 (C=4) |
+|---|---:|---:|---:|---:|---:|
+| **Quality (default, `MOE_UNION_CAP=48`)** | 67.1 tok/s | 83.3 (26.6) tok/s | 120.5 (18.7) tok/s | 246 / 250 (98.4%) | 156 / 164 (95.1%) |
+| **Fast (`MOE_UNION_CAP=32`)** | 73.2 tok/s | 97.1 (32.6) tok/s | 139.0 (22.6) tok/s | 242 / 250 (96.8%) | 153 / 164 (93.3%) |
+| **Uncapped exact (`MOE_UNION_CAP=0`)** | exact (`KL=0`) | — | — | 244 / 250 (97.6%) | 157 / 164 (95.7%) |
+
+Fast mode (`MOE_UNION_CAP=32`) was measured on the same boot sequence on 2026-11-20 (`bench/bench.py --quick`, 38.9 tok/s prose, 1,597 / 1,587 / 1,469 tok/s prefill at 8K / 32K / 128K, 0 suspect characters, 13.26 GiB lowest `MemAvailable`). On sustained 4 × 153.6K concurrent long context (615K resident tokens in local RAM), `MOE_UNION_CAP=32` measured 43.0 tok/s aggregate (+13.3% vs 37.9 uncapped) with 8/8 passkey needles found.
 
 How long each chat can be. The KV pool holds 513,536 tokens, and each chat reserves its prompt plus `max_tokens`
 (8,192 when `max_tokens` is omitted), so the limit for each chat depends on how many chats are active:
@@ -53,17 +62,18 @@ The 1-chat value is measured (the served `max_model_len`); the others are comput
 2 chats: the longest prompt before a chat is evicted is 199,410 tokens with `max_tokens` omitted and 174,834 tokens at
 `max_tokens=32768`.
 
-Checks on the same boot:
+Checks on the same `v1.1.0` default boot:
 
 | check | result |
 |---|---|
 | smoke test | 14 of 14 |
-| fact hidden in a 131,006-token prompt | found |
+| fact hidden in a 130,813-token prompt | found |
 | count to 200, three times | 3 of 3 clean |
-| 75-item quality check (code, math, prose) | 73 of 75; the fp8 KV format scored 74 of 75 on the same boxes that day |
-| KL against the fp8 KV format, 4,096 positions | mean 0.0145, top-1 agreement 97.0% |
+| prompt cache | 422 of 423 cached |
+| suspect characters | 0 replies |
+| GSM8K-250 / HumanEval-164 (C=4, `MOE_UNION_CAP=48`) | 246 of 250 (98.4%) / 156 of 164 (95.1%) |
 | longest context (`max_model_len`) | 513,522 tokens |
-| lowest `MemAvailable` recorded on any box | 2.3 GB |
+| lowest `MemAvailable` recorded on any box | 13.53 GiB (13.98 - 14.54 GiB after boot) |
 
 int4 KV stores the attention latent in 4 bits. It is the launcher's default at TP=4 because it gives a larger KV pool
 at the same speed. `KV_FORMAT=fp8` in `.env` gives the earlier format, with a 485,376-token pool
@@ -137,8 +147,8 @@ that date (fp8 KV, MTP drafting). They were not measured again on the pinned eng
 At TP=6 one of the six boxes was capped at 2200 MHz.
 
 For five or six boxes with a longer context and tuned settings, use the recipes
-[glm-5.3-exlr8-5x-spark](https://github.com/kindlingai/glm-5.3-exlr8-5x-spark) (617K context) and
-[glm-5.3-exlr8-6x-spark](https://github.com/kindlingai/glm-5.3-exlr8-6x-spark) (613K context).
+[glm-5.3-exlr8-5x-spark](https://github.com/kindlingai/glm-5.3-exlr8-5x-spark) (737K context) and
+[glm-5.3-exlr8-6x-spark](https://github.com/kindlingai/glm-5.3-exlr8-6x-spark) (1M context).
 
 ## Help
 
@@ -157,11 +167,11 @@ This recipe has no engine code. It runs one published gr8 image, named by tag an
 
 | | |
 |---|---|
-| engine | [kindlingai/gr8](https://github.com/kindlingai/gr8) [`v1.0.1`](https://github.com/kindlingai/gr8/releases/tag/v1.0.1) at [`6333c78`](https://github.com/kindlingai/gr8/commit/6333c78a4ab4cfedc706793d689f54858c576d84) |
-| image | `ghcr.io/kindlingai/gr8:v1.0.1` |
-| digest | `sha256:02e44b9fc971f2acffe117df50de1be829462453287aab2c1d61a31a55738c0b` |
+| engine | [kindlingai/gr8](https://github.com/kindlingai/gr8) [`v1.1.0`](https://github.com/kindlingai/gr8/releases/tag/v1.1.0) at [`cdd1e09`](https://github.com/kindlingai/gr8/commit/cdd1e0931047f55bba8f682a0ae79c4198668ca3) |
+| image | `ghcr.io/kindlingai/gr8:v1.1.0` |
+| digest | `sha256:b22eedbd7902f65dbf2090897d75f5d92276cbf78a16bcde1f958aa56a306cf7` |
 
-The speed and quality results above were measured on 2026-11-11 on a staged image of gr8 [#490](https://github.com/kindlingai/gr8/pull/490), which merged as commit [`a555ee2`](https://github.com/kindlingai/gr8/commit/a555ee2a078946332769b5cd412ba3c73c46e242). `v1.0.1` ([`6333c78`](https://github.com/kindlingai/gr8/commit/6333c78a4ab4cfedc706793d689f54858c576d84)) updates the persistent SSD KV store (`KV_STORE` in `.env.example`) to preallocate its block file at boot, write only newly added KV blocks when a resumed chat continues ([#484](https://github.com/kindlingai/gr8/pull/484)), and persist steered chats alongside unsteered ones ([#498](https://github.com/kindlingai/gr8/pull/498)), verified on four DGX Sparks at TP=4 on 2026-11-12.
+All TP=4 results above were measured on 2026-11-20 directly on this pinned `gr8 v1.1.0` image (`sha256:b22eedbd...`).
 
 After v1.0, the pin moves to a newer gr8 release only after this recipe was booted and measured on it. `python3 check.py` checks
 that `compose.yaml` and `kindling.json` name the same image; CI runs it on every pull request.
