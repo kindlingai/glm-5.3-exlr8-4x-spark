@@ -140,17 +140,17 @@ The same image and the same `compose.yaml` serve GLM-5.3 on three, five or six b
 settings and expanded context pools, use the dedicated recipes:
 
 - **Five boxes (`v1.1.0`, 983K context):** [glm-5.3-exlr8-5x-spark](https://github.com/kindlingai/glm-5.3-exlr8-5x-spark) — measured 2026-11-20 on `gr8 v1.1.0`.
-- **Six boxes:** [glm-5.3-exlr8-6x-spark](https://github.com/kindlingai/glm-5.3-exlr8-6x-spark).
+- **Six boxes (`v1.1.0`, 1M context / 2.18M KV pool):** [glm-5.3-exlr8-6x-spark](https://github.com/kindlingai/glm-5.3-exlr8-6x-spark) — measured 2026-11-20 on `gr8 v1.1.0`.
 
-| | TP=3 (2026-10-24) | TP=5 (`v1.1.0`, 2026-11-20) | TP=6 (2026-10-24) |
+| | TP=3 (2026-10-24) | TP=5 (`v1.1.0`, 2026-11-20) | TP=6 (`v1.1.0`, 2026-11-20) |
 |---|---|---|---|
-| experts | `bit225`, 2.25 bpw | `bit325`, 3.25 bpw | `home`, 3.25 bpw |
-| decode, code / prose | 41.1 / 31.7 tok/s | 68.9 / 50.8 tok/s | 57.4 / 43.1 tok/s |
-| total, 2 / 4 / 8 requests at once | 50.6 / 63.8 / — tok/s | 81.1 / 104.2 / 141.5 tok/s | 67.6 / 85.5 / — tok/s |
-| prefill, 8K / 32K / 128K prompt | 635 / — / — tok/s | 1,937 / 1,960 / 1,837 tok/s | 1,808 / — / — tok/s |
-| KV pool (longest context) | 307,136 tokens | 983,040 tokens | 614,400 tokens |
+| experts | `bit225`, 2.25 bpw | `bit325`, 3.25 bpw | `bit325`, 3.25 bpw |
+| decode, code / prose | 41.1 / 31.7 tok/s | 68.9 / 50.8 tok/s | 78.0 / 58.0 tok/s |
+| total, 2 / 4 / 8 requests at once | 50.6 / 63.8 / — tok/s | 81.1 / 104.2 / 141.5 tok/s | 96.3 / 117.4 / 165.1 tok/s |
+| prefill, 8K / 32K / 128K prompt | 635 / — / — tok/s | 1,937 / 1,960 / 1,837 tok/s | 2,467 / 2,411 / 1,885 tok/s |
+| KV pool (longest context) | 307,136 tokens | 983,040 tokens | 2,179,072 tokens (1M max) |
 
-TP=3 and TP=6 rows above are from 2026-10-24 ([RigMark](https://github.com/alexellis/rigmark) 1.0.0, fp8 KV, MTP drafting; at TP=6 one box was capped at 2200 MHz). TP=5 is from 2026-11-20 on `gr8 v1.1.0` (`MOE_UNION_CAP=48`; fast preset `MOE_UNION_CAP=32` reaches 119.6 tok/s at C=4 and 160.5 tok/s at C=8).
+TP=3 row above is from 2026-10-24 ([RigMark](https://github.com/alexellis/rigmark) 1.0.0, fp8 KV, MTP drafting). TP=5 and TP=6 rows are from 2026-11-20 on `gr8 v1.1.0` (`MOE_UNION_CAP=48`; fast preset `MOE_UNION_CAP=32` reaches 119.6 / 160.5 tok/s at C=4 / C=8 on TP=5, and 128.2 / 180.2 tok/s at C=4 / C=8 on TP=6).
 
 ## Help
 
