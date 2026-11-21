@@ -33,7 +33,7 @@ On the head:
 
 - `docker compose exec gr8 /opt/gr8/gr8 glm53 health` exits 0.
 - `docker compose exec gr8 /opt/gr8/gr8 glm53 smoke` passes 14 of 14.
-- `curl -s localhost:8100/v1/models` shows `max_model_len` 513522.
+- `curl -s localhost:8100/v1/models` shows `max_model_len` 1048576.
 
 ## 5. Stop
 
