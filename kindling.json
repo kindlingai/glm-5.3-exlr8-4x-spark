@@ -230,29 +230,64 @@
    "label": "TP=6",
    "nodes": 6,
    "decode": {
-    "code": 57.4,
-    "prose": 43.1
+    "code": 78.0,
+    "prose": 58.0,
+    "structured": 81.0,
+    "counting": 84.7
    },
+   "decode_prompt_tokens": [
+    46,
+    54
+   ],
    "prefill": [
     {
      "context": 8192,
-     "tps": 1808
+     "tps": 2467
+    },
+    {
+     "context": 32768,
+     "tps": 2411
+    },
+    {
+     "context": 131072,
+     "tps": 1885
     }
    ],
    "concurrency": [
     {
+     "streams": 1,
+     "aggregate_tps": 66.4,
+     "per_stream_tps": 67.2,
+     "ttft_p50_s": 0.32
+    },
+    {
      "streams": 2,
-     "aggregate_tps": 67.6
+     "aggregate_tps": 96.3,
+     "per_stream_tps": 52.4,
+     "ttft_p50_s": 0.61
     },
     {
      "streams": 4,
-     "aggregate_tps": 85.5
+     "aggregate_tps": 117.4,
+     "per_stream_tps": 41.6,
+     "ttft_p50_s": 1.22
+    },
+    {
+     "streams": 8,
+     "aggregate_tps": 165.1,
+     "per_stream_tps": 32.0,
+     "ttft_p50_s": 2.56
     }
    ],
-   "max_context": 614400,
-   "kv_pool_tokens": 614400,
+   "concurrency_prompt_tokens": [
+    48,
+    55
+   ],
+   "max_context": 1048576,
+   "kv_pool_tokens": 2179072,
    "max_concurrent": 8,
-   "notes": "home experts (3.25 bpw), MTP only. RigMark 1.0.0, mean of two fresh boots, GPU clocks uncapped, measured 2026-10-24 with the launcher defaults of that date. One of the six boxes was capped at 2200 MHz."
+   "lowest_mem_available_gib": 7.41,
+   "notes": "bit325 experts (3.25 bpw, v0.6 @ 3e388b45), int4 KV (CAP=2,179,072, SHARE_LIMIT=65,536, SESS=8), MTP=3 with confidence stopping, gr8 v1.1.0, MOE_UNION_CAP=48 quality default (32 fast: 128.2 at C=4, 180.2 at C=8). bench/bench.py default level on 2026-11-20; see glm-5.3-exlr8-6x-spark."
   }
  ]
 }
