@@ -2,7 +2,7 @@
  "version": 1,
  "title": "GLM-5.3",
  "variant": "exlr8 bit325, int4 KV, 1M context, DFlash2 drafter",
- "summary": "Full GLM-5.3 on four DGX Sparks at TP=4 with gr8 v1.1.0: exlr8 bit325 (v0.6), int4 KV with a 1,130,496-token pool and 1,048,576 max context, zero-copy shared prefix pages, DFlash2 + MTP=2 drafting, eight bit-exact kernel paths plus MoE union cap (48 quality default, 32 fast preset), up to 8 concurrent chats, and a persistent SSD KV store. Live-proven at 3x300K, 4x153K, and 8x26K shared prefix.",
+ "summary": "Full GLM-5.3 on four DGX Sparks at TP=4 with gr8 v1.1.1: exlr8 bit325 (v0.6), int4 KV with a 1,130,496-token pool and 1,048,576 max context, zero-copy shared prefix pages, DFlash2 + MTP=2 drafting, eight bit-exact kernel paths plus MoE union cap (48 quality default, 32 fast preset), up to 8 concurrent chats, and a persistent SSD KV store. Live-proven at 3x300K, 4x153K, and 8x26K shared prefix.",
  "model": "kindlingai/glm-5.3-exlr8-k2-k3-k4",
  "hardware": "DGX Spark (GB10)",
  "stack": [
@@ -14,11 +14,11 @@
  ],
  "engine": {
   "repo": "kindlingai/gr8",
-  "ref": "v1.1.0",
-  "commit": "cdd1e0931047f55bba8f682a0ae79c4198668ca3",
+  "ref": "v1.1.1",
+  "commit": "a3f44a075854fc9af0ed56c6d43f7739705bc871",
   "pin": "image",
-  "image": "ghcr.io/kindlingai/gr8:v1.1.0",
-  "image_digest": "sha256:b22eedbd7902f65dbf2090897d75f5d92276cbf78a16bcde1f958aa56a306cf7"
+  "image": "ghcr.io/kindlingai/gr8:v1.1.1",
+  "image_digest": "sha256:fa5c9f66fbfa55d162782578b3262893b782e6365a76562bcab951b54acc6d96"
  },
  "default_config": "tp4",
  "configs": [
@@ -139,7 +139,7 @@
      "source": "computed"
     }
    ],
-   "max_tokens_per_chat_note": "prompt + max_tokens · live-proven: 3x300K (899K resident), 4x153K (614K resident), 8x26K shared prefix",
+   "max_tokens_per_chat_note": "prompt + max_tokens \u00b7 live-proven: 3x300K (899K resident), 4x153K (614K resident), 8x26K shared prefix",
    "quality": [
     {
      "name": "GSM8K-250 (C=4)",
